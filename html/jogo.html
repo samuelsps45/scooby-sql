@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scooby-Doo: O Mistério do Banco de Dados</title>
+<link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/style.css">
+<!-- sql.js: SQLite compilado para WebAssembly -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+</head>
+<body>
+<main id="app">
+
+  <!-- MENU INICIAL -->
+  <section id="tela-menu" class="tela ativa">
+    <img class="logo" src="../assets/img/logo.svg" alt="Lupa com ponto de interrogação">
+    <h1>Scooby-Doo:<br>O Mistério do Banco de Dados</h1>
+    <p class="sub">Aprenda SQL resolvendo casos de mistério!</p>
+    <div class="menu-botoes">
+      <button class="btn grande" data-acao="novo">🔦 Nova aventura</button>
+      <button class="btn grande" data-acao="continuar">🗺️ Continuar aventura</button>
+      <button class="btn grande" data-acao="ajuda">📖 Como jogar e guia de SQL</button>
+    </div>
+    <p id="status-sql" class="status">Carregando o banco de dados…</p>
+    <span class="fantasma" aria-hidden="true">👻</span>
+  </section>
+
+  <!-- CUTSCENE -->
+  <section id="tela-cena" class="tela">
+    <div class="cena-palco"><div id="cena-avatar" class="avatar">🐶</div></div>
+    <div class="balao">
+      <strong id="cena-nome"></strong>
+      <p id="cena-texto"></p>
+      <div class="balao-rodape">
+        <span id="cena-progresso" class="status"></span>
+        <button class="btn pequeno claro" data-acao="pular">Pular cena</button>
+        <button id="cena-prox" class="btn" data-acao="proxfala">Próximo ▶</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAPA DE FASES -->
+  <section id="tela-mapa" class="tela">
+    <header class="barra">
+      <button class="btn pequeno claro" data-acao="menu">← Menu</button>
+      <h2>Mapa do mistério</h2>
+      <span class="pontos">⭐ <b id="mapa-pontos">0</b></span>
+    </header>
+    <div id="mapa-fases"></div>
+  </section>
+
+  <!-- DESAFIO -->
+  <section id="tela-desafio" class="tela">
+    <header class="barra">
+      <button class="btn pequeno claro" data-acao="mapa">← Mapa</button>
+      <h2 id="d-fase"></h2>
+      <span class="pontos">⭐ <b id="d-pontos">0</b></span>
+    </header>
+    <article class="card">
+      <h3 id="d-titulo"></h3>
+      <p id="d-historia"></p>
+      <p id="d-dica" class="dica" hidden></p>
+    </article>
+    <label for="sql" class="rotulo">Seu comando SQL:</label>
+    <textarea id="sql" rows="5" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Digite aqui. Atalho: Ctrl + Enter para executar"></textarea>
+    <div class="linha-botoes">
+      <button class="btn" data-acao="executar">▶ Executar</button>
+      <button class="btn verde" data-acao="verificar">🔍 Resolver mistério</button>
+      <button class="btn claro" data-acao="dica">💡 Dica (−20 pts)</button>
+      <button class="btn claro" data-acao="tabelas">🗃️ Ver tabelas</button>
+      <button class="btn claro" data-acao="limpar">🧹 Limpar</button>
+    </div>
+    <p id="mensagem" class="mensagem" role="status"></p>
+    <div id="resultado"></div>
+    <div id="painel-tabelas" hidden></div>
+    <p class="status">Cada execução começa com o banco original, então pode testar à vontade.</p>
+  </section>
+
+  <!-- GUIA / AJUDA -->
+  <section id="tela-ajuda" class="tela">
+    <header class="barra">
+      <button class="btn pequeno claro" data-acao="menu">← Menu</button>
+      <h2>Como jogar</h2><span></span>
+    </header>
+    <article class="card">
+      <p>Você é o novo integrante da Mistério S.A. Em cada fase há quatro desafios. Leia a história, escreva o comando SQL e clique em <b>Resolver mistério</b>. Cada desafio vale até 100 pontos: errar tira 20 e usar a dica tira 20 (mínimo de 20).</p>
+      <p>Use <b>Executar</b> para testar sem valer pontos e <b>Ver tabelas</b> para consultar os dados.</p>
+    </article>
+    <article class="card rolagem">
+      <h3>Guia rápido de SQL</h3>
+      <table>
+        <tr><th>Comando</th><th>Para que serve</th></tr>
+        <tr><td><code>SELECT * FROM tabela;</code></td><td>Mostra todas as colunas e linhas</td></tr>
+        <tr><td><code>SELECT col1, col2 FROM tabela;</code></td><td>Mostra só as colunas escolhidas</td></tr>
+        <tr><td><code>... WHERE col = 'texto';</code></td><td>Filtra linhas (use AND / OR para combinar)</td></tr>
+        <tr><td><code>INSERT INTO t (c1, c2) VALUES (1, 'a');</code></td><td>Insere uma linha</td></tr>
+        <tr><td><code>UPDATE t SET col = 'x' WHERE ...;</code></td><td>Altera linhas existentes</td></tr>
+        <tr><td><code>DELETE FROM t WHERE ...;</code></td><td>Remove linhas</td></tr>
+        <tr><td><code>CREATE TABLE t (id INTEGER, nome TEXT);</code></td><td>Cria uma tabela</td></tr>
+        <tr><td><code>DROP TABLE t;</code></td><td>Apaga uma tabela inteira</td></tr>
+      </table>
+    </article>
+  </section>
+
+  <!-- FINAL -->
+  <section id="tela-final" class="tela">
+    <h1>🏆 Caso encerrado!</h1>
+    <article class="card centro">
+      <p>Pontuação final:</p>
+      <p class="grande-num">⭐ <span id="f-pontos">0</span> / 1200</p>
+      <p id="f-rank"></p>
+    </article>
+    <div class="menu-botoes">
+      <button class="btn grande" data-acao="mapa">🗺️ Rever o mapa (melhorar pontos)</button>
+      <button class="btn grande claro" data-acao="reiniciar">🔄 Jogar de novo</button>
+      <button class="btn grande claro" data-acao="menu">🏠 Menu inicial</button>
+    </div>
+  </section>
+</main>
+
+<!-- MODAL DE RESULTADO -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-caixa">
+    <h3 id="modal-titulo"></h3>
+    <p id="modal-texto"></p>
+    <div class="linha-botoes">
+      <button id="modal-ok" class="btn verde" data-acao="modalok">Continuar</button>
+      <button class="btn claro" data-acao="modalmapa">Voltar ao mapa</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/dados.js"></script>
+<script src="../js/jogo.js"></script>
+</body>
+</html>
